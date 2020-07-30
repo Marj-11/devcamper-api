@@ -80,7 +80,7 @@ const BootcampSchema = new mongoose.Schema({
     },
     imageUrl: {
         type: String,
-        default: 'https://devcamper-backend.herokuapp.com/public/bootcampUploads',
+        default: 'https://devcamper-backend.herokuapp.com/bootcampUploads',
     },
     housing: {
         type: Boolean,
