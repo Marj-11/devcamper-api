@@ -23,7 +23,7 @@ const UserSchema = new mongoose.Schema({
     },
     imageUrl: {
         type: String,
-        default: 'http://localhost:5000/userUploads/',
+        default: 'https://devcamper-backend.herokuapp.com/public/userUploads/',
     },
     role: {
         type: String,
