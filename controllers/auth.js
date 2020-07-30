@@ -128,12 +128,10 @@ exports.forgotPassword = asyncHandler(async(req, res, next) => {
 
     await user.save({ validateBeforeSave: false });
 
-    // Create reset url
-    const resetUrl = `${req.protocol}://${req.get(
-    'host'
-  )}/api/v1/auth/resetpassword/${resetToken}`;
+    const resetFrontUrl = `http://localhost:3000/login/${resetToken}`;
 
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+    const resetUrl = `<a href=${resetFrontUrl}>here</a>`;
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please click ${resetUrl} to reset your Password.`;
 
     try {
         await sendEmail({
@@ -144,7 +142,6 @@ exports.forgotPassword = asyncHandler(async(req, res, next) => {
 
         res.status(200).json({ success: true, data: 'Email sent' });
     } catch (err) {
-        console.log(err);
         user.resetPasswordToken = undefined;
         user.resetPasswordExpire = undefined;
 

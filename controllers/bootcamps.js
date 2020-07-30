@@ -65,23 +65,42 @@ exports.updateBootcamp = asyncHandler(async(req, res, next) => {
             new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
         );
     }
-
+    // Make sure user cannot register twice
+    // if (bootcamp.participants.includes(req.user.id)) {
+    //     return next(new ErrorResponse(`you cannot register again!`, 500));
+    // }
     // Make sure user is bootcamp owner
-    if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
-        return next(
-            new ErrorResponse(
-                `User ${req.params.id} is not authorized to update this bootcamp`,
-                401
-            )
-        );
+    // if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'user') {
+    //     return next(
+    //         new ErrorResponse(
+    //             `User ${req.params.id} is not authorized to update this bootcamp`,
+    //             401
+    //         )
+    //     );
+    // }
+
+    if (Object.keys(req.body).length === 1) {
+        bootcamp.participants.push(req.body.participants);
+        bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, bootcamp, {
+            new: true,
+            runValidators: true,
+        });
+
+        res.status(200).json({
+            success: true,
+            data: bootcamp,
+        });
+        // return;
     }
 
     bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true,
     });
-
-    res.status(200).json({ success: true, data: bootcamp });
+    res.status(200).json({
+        success: true,
+        data: bootcamp,
+    });
 });
 
 // @desc      Delete bootcamp
@@ -128,9 +147,13 @@ exports.getBootcampsInRadius = asyncHandler(async(req, res, next) => {
     const radius = distance / 3963;
 
     const bootcamps = await Bootcamp.find({
-        location: { $geoWithin: { $centerSphere: [
+        location: {
+            $geoWithin: {
+                $centerSphere: [
                     [lng, lat], radius
-                ] } },
+                ],
+            },
+        },
     });
 
     res.status(200).json({
@@ -177,7 +200,7 @@ exports.bootcampPhotoUpload = asyncHandler(async(req, res, next) => {
     if (file.size > process.env.MAX_FILE_UPLOAD) {
         return next(
             new ErrorResponse(
-                `Please upload an image less than ${process.env.MAX_FILE_UPLOAD}`,
+                `Please upload an image less than ${process.env.MAX_FILE_UPLOAD} byte`,
                 400
             )
         );
@@ -186,17 +209,20 @@ exports.bootcampPhotoUpload = asyncHandler(async(req, res, next) => {
     // Create custom filename
     file.name = `photo_${bootcamp._id}${path.parse(file.name).ext}`;
 
-    file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`, async(err) => {
-        if (err) {
-            console.error(err);
-            return next(new ErrorResponse(`Problem with file upload`, 500));
+    file.mv(
+        `${process.env.FILE_BOOTCAMPUPLOAD_PATH}/${file.name}`,
+        async(err) => {
+            if (err) {
+                console.error(err);
+                return next(new ErrorResponse(`Problem with file upload`, 500));
+            }
+
+            await Bootcamp.findByIdAndUpdate(req.params.id, { photo: file.name });
+
+            res.status(200).json({
+                success: true,
+                data: file.name,
+            });
         }
-
-        await Bootcamp.findByIdAndUpdate(req.params.id, { photo: file.name });
-
-        res.status(200).json({
-            success: true,
-            data: file.name,
-        });
-    });
+    );
 });

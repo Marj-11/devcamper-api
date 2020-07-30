@@ -32,13 +32,13 @@ router
 
 router
     .route('/')
-    .get(protect, advancedResults(Bootcamp, 'courses'), getBootcamps)
+    .get(advancedResults(Bootcamp, 'courses'), getBootcamps)
     .post(protect, authorize('publisher', 'admin'), createBootcamp);
 
 router
     .route('/:id')
     .get(getBootcamp)
-    .put(protect, authorize('publisher', 'admin'), updateBootcamp)
+    .put(protect, authorize('publisher', 'admin', 'user'), updateBootcamp)
     .delete(protect, authorize('publisher', 'admin'), deleteBootcamp);
 
 module.exports = router;
